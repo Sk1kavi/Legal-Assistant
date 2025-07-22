@@ -1,6 +1,7 @@
+import ChatBot from "./pages/ChatBot";
 
 export default function App(){
   return(
-    <h1> Legal Assistant</h1>
+    <ChatBot/>
   )
 }
