@@ -15,7 +15,15 @@ def file_complaint(user_id, details, on_behalf_of=None):
     return {"message": "Complaint filed"}
 
 def get_complaints_by_user(user_id):
-    return list(complaints_collection.find({"user_id": ObjectId(user_id)}))
+    complaints = complaints_collection.find({"user_id": ObjectId(user_id)})
+    complaint_list = []
+    for complaint in complaints:
+        complaint["_id"] = str(complaint["_id"])
+        complaint["user_id"] = str(complaint["user_id"])
+        if complaint.get("lawyer_id"):
+            complaint["lawyer_id"] = str(complaint["lawyer_id"])
+        complaint_list.append(complaint)
+    return complaint_list
 
 def get_all_complaints_for_lawyers():
     return list(complaints_collection.find({}))

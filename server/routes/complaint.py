@@ -6,16 +6,16 @@ complaint_bp = Blueprint("complaint", __name__)
 
 @complaint_bp.route("/file", methods=["POST"])
 @jwt_required()
-def file():
-    user = get_jwt_identity()
+def file_complaint_route():
+    user_id = get_jwt_identity()
     data = request.get_json()
-    return jsonify(file_complaint(user_id=user["id"], details=data["details"], on_behalf_of=data.get("on_behalf_of")))
+    return jsonify(file_complaint(user_id=user_id, details=data["details"], on_behalf_of=data.get("on_behalf_of")))
 
 @complaint_bp.route("/complaints", methods=["GET"])
 @jwt_required()
 def user_complaints():
     user = get_jwt_identity()
-    return jsonify(get_complaints_by_user(user["id"]))
+    return jsonify(get_complaints_by_user(user))
 
 @complaint_bp.route("/all", methods=["GET"])
 @jwt_required()
@@ -32,4 +32,4 @@ def update_status(id):
     data = request.get_json()
     if user["role"] != "lawyer":
         return jsonify({"error": "Only lawyers can change status"}), 403
-    return jsonify(update_complaint_status(id, data["status"], user["id"]))
+    return jsonify(update_complaint_status(id, data["status"], user))

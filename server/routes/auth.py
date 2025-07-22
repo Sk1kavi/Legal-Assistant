@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models.user import register_user, login_user
 import jwt
+from flask_jwt_extended import create_access_token, get_jwt
 import os
 from datetime import datetime, timedelta
 
@@ -16,11 +17,9 @@ def login():
     data = request.get_json()
     user = login_user(data)
     if user:
-        payload = {
-            "id": str(user["_id"]),
-            "role": user["role"],
-            "exp": datetime.utcnow() + timedelta(hours=24)
-        }
-        token = jwt.encode(payload, os.environ["SECRET_KEY"], algorithm="HS256")
-        return jsonify({"token": token})
+        access_token = create_access_token(
+            identity=str(user["_id"]),
+            additional_claims={"role": user["role"]}
+        )
+        return jsonify(access_token=access_token)
     return jsonify({"error": "Invalid credentials"}), 401
