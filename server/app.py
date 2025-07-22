@@ -1,14 +1,26 @@
 from boltiotai import openai
 import os
-from flask import Flask, request
+from db import client
+from routes.auth import auth_bp
+from routes.complaint import complaint_bp
+from flask import Flask, request , jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()
+from flask_jwt_extended import JWTManager
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = os.environ.get("SECRET_KEY")
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]  # Default is headers
+app.config["JWT_HEADER_NAME"] = "Authorization"
+app.config["JWT_HEADER_TYPE"] = "Bearer"
+
+jwt = JWTManager(app)
 CORS(app)  # Allow requests from your React frontend
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(complaint_bp, url_prefix='/complaint')
 
 def generate_legal_answer(state, question):
     response = openai.chat.completions.create(
