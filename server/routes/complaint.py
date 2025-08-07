@@ -1,35 +1,48 @@
 from flask import Blueprint, request, jsonify
-from models.complaint import file_complaint, get_complaints_by_user, get_all_complaints_for_lawyers, update_complaint_status
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from models.complaint import (
+    file_complaint,
+    get_complaints_by_user,
+    get_all_complaints_for_lawyers,
+    accept_complaint_by_lawyer,
+    update_complaint_status
+)
 
 complaint_bp = Blueprint("complaint", __name__)
 
+# 1. File a Complaint
 @complaint_bp.route("/file", methods=["POST"])
-@jwt_required()
 def file_complaint_route():
-    user_id = get_jwt_identity()
     data = request.get_json()
-    return jsonify(file_complaint(user_id=user_id, details=data["details"], on_behalf_of=data.get("on_behalf_of")))
 
-@complaint_bp.route("/complaints", methods=["GET"])
-@jwt_required()
-def user_complaints():
-    user = get_jwt_identity()
-    return jsonify(get_complaints_by_user(user))
+    required_fields = ["user_id", "details", "against_name", "for_someone_else"]
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 422
 
+    return jsonify(file_complaint(data))
+
+# 2. Get Complaints of a Specific User
+@complaint_bp.route("/user/<user_id>", methods=["GET"])
+def user_complaints(user_id):
+    return jsonify(get_complaints_by_user(user_id))
+
+# 3. Get All Complaints (for Lawyers/Admins)
 @complaint_bp.route("/all", methods=["GET"])
-@jwt_required()
-def lawyer_view_all():
-    user = get_jwt_identity()
-    if user["role"] != "lawyer":
-        return jsonify({"error": "Unauthorized"}), 403
-    return jsonify(get_all_complaints_for_lawyers())
+def get_all_complaints():
+    status_filter = request.args.get("status")
+    return jsonify(get_all_complaints_for_lawyers(status_filter))
 
-@complaint_bp.route("/<id>/status", methods=["PATCH"])
-@jwt_required()
-def update_status(id):
-    user = get_jwt_identity()
+# 4. Lawyer Accepts a Complaint
+@complaint_bp.route("/accept/<complaint_id>", methods=["POST"])
+def accept_complaint(complaint_id):
     data = request.get_json()
-    if user["role"] != "lawyer":
-        return jsonify({"error": "Only lawyers can change status"}), 403
-    return jsonify(update_complaint_status(id, data["status"], user))
+    if "lawyer_id" not in data:
+        return jsonify({"error": "Missing lawyer_id"}), 422
+    return jsonify(accept_complaint_by_lawyer(complaint_id, data["lawyer_id"]))
+
+# 5. Change Complaint Status (Accepted → Solved)
+@complaint_bp.route("/status/<complaint_id>", methods=["PUT"])
+def change_status(complaint_id):
+    data = request.get_json()
+    if "status" not in data:
+        return jsonify({"error": "Missing status"}), 422
+    return jsonify(update_complaint_status(complaint_id, data["status"]))
