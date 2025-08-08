@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "../pages/Home";
-import ChatBot from "../pages/ChatBot";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
- import UserComplaintDashboard from "../pages/UserComplaintDashboard";
-import LawyerDashboard from "../pages/LawyerDashboard";
+import Home from "./pages/Home";
+import ChatBot from "./pages/ChatBot";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+ import UserComplaintDashboard from "./pages/UserComplaintDashboard";
+import LawyerDashboard from "./pages/LawyerDashboard";
 
 
 
